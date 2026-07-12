@@ -31,29 +31,17 @@ module tb_eth_rx;
 
     logic [7:0] frame[$];
 
-    // rmii_rx u_rmii (
-    //     .clk50(clk50), .rst_n(rst_n),
-    //     .rmii_rxd(rmii_rxd), .rmii_crs_dv(rmii_crs_dv),
-    //     .rx_data(rx_data), .rx_valid(rx_valid), .rx_frame_end(rx_frame_end)
-    // );
+    rmii_rx u_rmii (
+        .clk50(clk50), .rst_n(rst_n),
+        .rmii_rxd(rmii_rxd), .rmii_crs_dv(rmii_crs_dv),
+        .rx_data(rx_data), .rx_valid(rx_valid), .rx_frame_end(rx_frame_end)
+    );
 
-    // eth_frame_rx u_mac (
-    //     .clk(clk50), .rst_n(rst_n),
-    //     .rx_data(rx_data), .rx_valid(rx_valid), .rx_frame_end(rx_frame_end),
-    //     .m_data(m_data), .m_valid(m_valid), .frame_done(frame_done), .frame_ok(frame_ok)
-    // );
-    rx_ethernet dut (
-    .clk50(clk50),
-    .rst_n(rst_n),
-
-    .rmii_rxd(rmii_rxd),
-    .rmii_crs_dv(rmii_crs_dv),
-
-    .m_data(m_data), 
-    .m_valid(m_valid), 
-    .frame_done(frame_done), 
-    .frame_ok(frame_ok)
-);
+    eth_frame_rx u_mac (
+        .clk(clk50), .rst_n(rst_n),
+        .rx_data(rx_data), .rx_valid(rx_valid), .rx_frame_end(rx_frame_end),
+        .m_data(m_data), .m_valid(m_valid), .frame_done(frame_done), .frame_ok(frame_ok)
+    );
 
     //-------------------------------------------------------------------------
     // Reference CRC32 (same algorithm as DUT) used to build the FCS
