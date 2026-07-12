@@ -146,6 +146,7 @@ module eth_packet_fifo #(
         if (!rst_n) begin
             rd_ptr   <= '0;
             rd_valid <= 1'b0;
+            rd_word  <= '0;
         end else begin
             if (rd_en) begin
                 rd_word  <= mem[rd_ptr[AW-1:0]];

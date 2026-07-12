@@ -8,7 +8,7 @@ the FPGA answers ping and streams live data to a PC.
 checking, verified in simulation.
 
 ---
-
+![alt text](Documentation/elaborate_design.png)
 ## 1. Ethernet in one minute
 
 Data on Ethernet travels in **frames**. The PHY chip handles the analog side

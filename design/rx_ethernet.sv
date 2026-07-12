@@ -1,6 +1,26 @@
+`timescale 1ns/1ps
+//=============================================================================
 // rx_ethernet.sv
+//
+// Full RX chain, RMII pins to clean-frame stream:
+//
+//   rmii_rx -> eth_frame_rx -> mac_filter -> eth_packet_fifo -> (you)
+//
+// Everything runs in the 50 MHz RMII clock domain. The read side is a
+// first-word-fall-through valid/ready stream; frame boundaries are marked
+// by rd_last on the final byte.
+//
+// Contract for the consumer:
+//   * Every frame that appears on rd_* is complete, CRC-verified, and
+//     addressed to MAC_ADDR or broadcast. FCS already stripped.
+//   * !empty implies a whole frame is buffered -- a parser can stream a
+//     frame start-to-end without stalling mid-frame.
+//   * Byte 0..5 = destination MAC, 6..11 = source MAC, 12..13 = EtherType,
+//     14.. = payload.
+//=============================================================================
 module rx_ethernet #(
-    parameter int FIFO_DEPTH = 2048
+    parameter logic [47:0] MAC_ADDR   = 48'h02_00_00_00_00_01,
+    parameter int          FIFO_DEPTH = 2048
 )(
     input  logic       clk50,
     input  logic       rst_n,
@@ -13,19 +33,24 @@ module rx_ethernet #(
     output logic [7:0] rd_data,
     output logic       rd_last,
     output logic       rd_valid,
-    input  logic       rd_ready,       // note: an INPUT -- consumer drives it
+    input  logic       rd_ready,
 
-    // Status (nice for LEDs/debug)
-    output logic       frame_dropped
+    // Status pulses (LEDs / counters / debug)
+    output logic       frame_dropped,   // any discarded frame (CRC/MAC/overflow)
+    output logic       mac_reject       // subset: CRC was fine, address wasn't
 );
 
-    // Stage 1 -> Stage 2
+    // Stage 1 -> 2
     logic [7:0] rx_data;
     logic       rx_valid, rx_frame_end;
 
-    // Stage 2 -> Stage 3 (now internal!)
+    // Stage 2 -> 3
     logic [7:0] m_data;
     logic       m_valid, frame_done, frame_ok;
+
+    // Stage 3 -> 4
+    logic [7:0] f_data;
+    logic       f_valid, f_frame_done, f_frame_ok;
 
     rmii_rx u_rmii (
         .clk50        (clk50),
@@ -49,16 +74,28 @@ module rx_ethernet #(
         .frame_ok     (frame_ok)
     );
 
+    mac_filter #(.MAC_ADDR(MAC_ADDR)) u_filter (
+        .clk            (clk50),
+        .rst_n          (rst_n),
+        .in_data        (m_data),
+        .in_valid       (m_valid),
+        .in_frame_done  (frame_done),
+        .in_frame_ok    (frame_ok),
+        .out_data       (f_data),
+        .out_valid      (f_valid),
+        .out_frame_done (f_frame_done),
+        .out_frame_ok   (f_frame_ok),
+        .mac_reject     (mac_reject)
+    );
+
     eth_packet_fifo #(.DEPTH(FIFO_DEPTH)) u_fifo (
         .clk           (clk50),
         .rst_n         (rst_n),
-        // write side: names line up 1:1 with the parser outputs
-        .wr_data       (m_data),
-        .wr_valid      (m_valid),
-        .frame_done    (frame_done),
-        .frame_ok      (frame_ok),
+        .wr_data       (f_data),
+        .wr_valid      (f_valid),
+        .frame_done    (f_frame_done),
+        .frame_ok      (f_frame_ok),
         .frame_dropped (frame_dropped),
-        // read side: straight to the top-level ports
         .rd_data       (rd_data),
         .rd_last       (rd_last),
         .rd_valid      (rd_valid),
