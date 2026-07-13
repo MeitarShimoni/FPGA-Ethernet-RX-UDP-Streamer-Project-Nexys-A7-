@@ -129,7 +129,7 @@ module eth_frame_rx (
 
                     if (rx_frame_end) begin
                         frame_done <= 1'b1;
-                        frame_ok   <= (crc == CRC_RESIDUE);
+                        frame_ok   <= (crc == CRC_RESIDUE) ? 1'b1 : 1'b0;
                         state      <= IDLE;
                     end
                 end
