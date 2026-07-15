@@ -10,3 +10,7 @@
 
 This Test Shows how the mac filter or not the frame into a fifo.
 ![alt text](Documentation/MacTest.png)
+
+
+
+## Currently The System validated on the FPGA and the FPGA is reciving packets!
