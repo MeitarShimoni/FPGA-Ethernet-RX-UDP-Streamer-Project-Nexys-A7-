@@ -14,3 +14,6 @@ This Test Shows how the mac filter or not the frame into a fifo.
 
 
 ## Currently The System validated on the FPGA and the FPGA is reciving packets!
+
+
+## Updated FIFO to be BRAM memory type.

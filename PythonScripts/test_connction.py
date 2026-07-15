@@ -7,4 +7,4 @@ i = 0
 while True:
     s.sendto(f"hello fpga {i}".encode(), ("192.168.1.255", 5000))
     i += 1
-    time.sleep(0.005)
+    time.sleep(0.00005)
