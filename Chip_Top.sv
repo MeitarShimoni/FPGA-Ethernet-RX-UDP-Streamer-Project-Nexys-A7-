@@ -1,4 +1,4 @@
-module Chip_Top (
+module Chip_Top #(parameter int PHY_RST_W = 20 )(
     input  logic       clk,          // 100 MHz board oscillator
     input  logic       rst_n,        // active-low reset (check button polarity!)
 
@@ -25,8 +25,19 @@ module Chip_Top (
     logic [7:0]  rd_data;
     logic        rd_last, rd_valid, rd_ready;
     logic        frame_dropped, mac_reject;
-    logic [19:0] phy_rst_cnt;
+    logic [PHY_RST_W-1:0] phy_rst_cnt;
     logic [15:0]  frame_count;
+
+
+    // UDP Signals
+    logic [7:0]  pay_data;
+    logic        pay_valid; 
+    logic        pay_last;
+    logic [31:0] src_ip;
+    logic [15:0] src_port;
+
+
+
 
     // =============== DEBUG LEDs =================
     assign red_led_1  = frame_dropped;
@@ -86,6 +97,30 @@ module Chip_Top (
         .mac_reject    (mac_reject)
     );
 
+    // ---------------- NEW: UDP parser ----------------
+    udp_rx #(.LISTEN_PORT(16'd5000)) u_udp (
+        .clk       (clk50),
+        .rst_n     (sys_rst_n),
+        .rd_data   (rd_data),
+        .rd_valid  (rd_valid),
+        .rd_last   (rd_last),
+        .rd_ready  (rd_ready),       // udp_rx drives this INTO the FIFO
+        .pay_data  (pay_data),
+        .pay_valid (pay_valid),
+        .pay_last  (pay_last),
+        .src_ip    (src_ip),
+        .src_port  (src_port)
+    );
+
+
+
+    logic [7:0] last_pay_byte;
+    // latch the last byte of each payload for debug
+    always_ff @(posedge clk50 or negedge sys_rst_n) begin
+        if (!sys_rst_n)     last_pay_byte <= '0;
+        else if (pay_valid) last_pay_byte <= (pay_data-'h30); // ASCII -> decimal
+    end
+
     // ---------------- first-light indicator ----------------
     always_ff @(posedge clk50 or negedge sys_rst_n) begin
         if (!sys_rst_n)               frame_count <= '0;
@@ -95,7 +130,7 @@ module Chip_Top (
     seven_segment segment_display (
         .system_clock (clk50),        // same domain as frame_count!
         .cpu_rst_n    (sys_rst_n),
-        .display_val  ({rd_data,8'd0,frame_count}),
+        .display_val  ({last_pay_byte,8'd0,frame_count}),
         .cathodes_out (cathodes_out),
         .anodes       (anodes)
     );
