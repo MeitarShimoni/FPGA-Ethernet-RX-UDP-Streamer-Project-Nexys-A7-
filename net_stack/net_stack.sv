@@ -34,6 +34,10 @@ module net_stack #(
     output logic [1:0] rmii_txd,
     output logic       rmii_tx_en,
 
+    // Add Stream Inputs
+    
+    // Add Stream Outputs
+
     // Taps for display / debug
     output logic [7:0] pay_data,
     output logic       pay_valid,
@@ -58,6 +62,14 @@ module net_stack #(
     logic [7:0]  a_data,     b_data;
     logic        a_valid, a_last, a_ready;
     logic        b_valid, b_last, b_ready;
+
+    logic [47:0] c_dst_mac;
+    logic [15:0] c_type;
+    logic [7:0]  c_data;
+    logic        c_valid; 
+    logic        c_last; 
+    logic        c_ready;
+
 
     // arbiter -> tx
     logic [47:0] dst_mac;
@@ -126,21 +138,57 @@ module net_stack #(
         .busy      (echo_busy)
     );
 
-    tx_mux2 u_mux (
+    // tx_mux2 u_mux (
+    //     .clk         (clk50),
+    //     .rst_n       (rst_n),
+    //     .a_dst_mac   (a_dst_mac),
+    //     .a_ether_type(a_type),
+    //     .a_pl_data   (a_data),
+    //     .a_pl_valid  (a_valid),
+    //     .a_pl_last   (a_last),
+    //     .a_pl_ready  (a_ready),
+    //     .b_dst_mac   (b_dst_mac),
+    //     .b_ether_type(b_type),
+    //     .b_pl_data   (b_data),
+    //     .b_pl_valid  (b_valid),
+    //     .b_pl_last   (b_last),
+    //     .b_pl_ready  (b_ready),
+    //     .dst_mac     (dst_mac),
+    //     .ether_type  (ether_type),
+    //     .pl_data     (pl_data),
+    //     .pl_valid    (pl_valid),
+    //     .pl_last     (pl_last),
+    //     .pl_ready    (pl_ready)
+    // );
+
+        assign c_dst_mac = a_dst_mac;
+        assign c_type    = a_type;
+
+        tx_mux3 u_mux (
         .clk         (clk50),
         .rst_n       (rst_n),
+        // PRIORITY: ARP wins over UDP echo
         .a_dst_mac   (a_dst_mac),
         .a_ether_type(a_type),
         .a_pl_data   (a_data),
         .a_pl_valid  (a_valid),
         .a_pl_last   (a_last),
         .a_pl_ready  (a_ready),
+        // UDP echo is next in priority
         .b_dst_mac   (b_dst_mac),
         .b_ether_type(b_type),
         .b_pl_data   (b_data),
         .b_pl_valid  (b_valid),
         .b_pl_last   (b_last),
         .b_pl_ready  (b_ready),
+        // UDP echo is next in priority
+        .c_dst_mac   (c_dst_mac),
+        .c_ether_type(c_type),
+        .c_pl_data   (c_data),
+        .c_pl_valid  (c_valid),
+        .c_pl_last   (c_last),
+        .c_pl_ready  (c_ready),
+        
         .dst_mac     (dst_mac),
         .ether_type  (ether_type),
         .pl_data     (pl_data),

@@ -40,4 +40,4 @@ while True:
         print(f" -> Status: ERROR ({e})\n")
         
     i += 1
-    # time.sleep(0.0001) # Wait 1 second before the next ping
+    time.sleep(1) # Wait 1 second before the next ping
