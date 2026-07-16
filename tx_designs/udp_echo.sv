@@ -71,8 +71,14 @@ module udp_echo #(
             ram[wcnt] <= pay_data;
     end
 
-    always_ff @(posedge clk)                             // read port
-        ram_q <= ram[raddr];
+    // always_ff @(posedge clk)                             // read port
+    //     ram_q <= ram[raddr];
+    wire rd_en = (state == CAPTURE) || advance;
+
+    always_ff @(posedge clk) begin                       // read port
+        if (rd_en)
+            ram_q <= ram[raddr];
+    end
 
     //-------------------------------------------------------------------------
     // Reply fields, latched at capture completion
