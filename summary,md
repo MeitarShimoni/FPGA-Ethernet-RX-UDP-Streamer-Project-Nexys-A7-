@@ -17,3 +17,23 @@ This Test Shows how the mac filter or not the frame into a fifo.
 
 
 ## Updated FIFO to be BRAM memory type.
+
+
+
+## Tests:
+
+Burst Test (50 packets): Result: Passed. Confirmed the system handles rapid request sequences.
+
+MTU Stress Test (1400 bytes): Result: Passed. Verified the design correctly buffers and echoes full-size 1400-byte UDP packets.
+
+Multi-Client Test: Result: Passed. Confirmed the design successfully services requests from multiple different source ports.
+
+Throughput/Bandwidth Test: Result: 94.97 Mbps. Achieved near-maximum wire-speed performance on the 100 Mbps RMII physical layer.
+
+Achivements:
+
+*Network Engineering: Designed and verified a custom UDP echo engine on FPGA, achieving 94.97 Mbps effective payload throughput, operating at 95% efficiency relative to the 100 Mbps physical layer limits.*
+
+This test is effectively a "throughput and drop-rate analysis". You can frame the result of this test in your next resume update:
+
+"Characterized system throughput by implementing a non-blocking Python verification suite, quantifying packet loss under burst-load scenarios to optimize hardware arbitration logic."

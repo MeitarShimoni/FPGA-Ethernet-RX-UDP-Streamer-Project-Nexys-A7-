@@ -80,6 +80,18 @@ module udp_echo #(
             ram_q <= ram[raddr];
     end
 
+    // ============================ DEBUG ======================================
+    // Add this for debug
+    logic [10:0] packet_counter;
+    always_ff @(posedge clk) begin
+        if (!rst_n) begin
+            packet_counter <= 0;
+        end else begin
+            if (state == CAPTURE && pay_valid) packet_counter <= packet_counter + 1;
+            else if (state == CAPTURE && pay_last) packet_counter <= 0;
+        end
+    end
+
     //-------------------------------------------------------------------------
     // Reply fields, latched at capture completion
     //-------------------------------------------------------------------------
@@ -179,11 +191,26 @@ module udp_echo #(
                     end
                 end
 
+                // SEND: if (advance) begin
+                //     idx <= idx + 11'd1;
+                //     // keep ram_q one byte ahead of the payload index
+                //     raddr <= (idx + 11'd1 >= 11'd28) ? (idx + 11'd1 - 11'd27)
+                //                                      : 11'd0;
+                //     if (pl_last) begin
+                //         state <= CAPTURE;
+                //         wcnt  <= '0;
+                //     end
+                // end
                 SEND: if (advance) begin
                     idx <= idx + 11'd1;
-                    // keep ram_q one byte ahead of the payload index
-                    raddr <= (idx + 11'd1 >= 11'd28) ? (idx + 11'd1 - 11'd27)
-                                                     : 11'd0;
+                    
+                    // Logic: 
+                    // When idx is 27, we want raddr to be 0 for the next cycle (pl_data starts reading RAM)
+                    if (idx == 11'd27)
+                        raddr <= 11'd0;
+                    else if (idx >= 11'd28)
+                        raddr <= raddr + 11'd1;
+                        
                     if (pl_last) begin
                         state <= CAPTURE;
                         wcnt  <= '0;

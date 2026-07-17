@@ -300,7 +300,8 @@ module tb_net_stack;
 
         //--- Test 3: UDP echo regression through the arbiter ------------------
         $display("--- Test 3: UDP echo still works ---");
-        str_to_bytes(app, "still echoing");
+        // str_to_bytes(app, "still echoing");
+        str_to_bytes(app, "Hi Im Meitar Shimoni Looking for a junior role as an RTL Designer! HIRE ME!");
         make_udp_frame(f, app);
         send_frame(f);
         begin
